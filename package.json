@@ -1,0 +1,19 @@
+{
+  "name": "ma-brewery-import",
+  "version": "1.0.0",
+  "main": "import.js",
+  "scripts": {
+    "import": "node import.js"
+  },
+  "type": "module",
+  "author": "Nick Braica <nick.braica@gmail.com> (https://braican.com)",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "dotenv": "^16.4.5"
+  },
+  "dependencies": {
+    "@notionhq/client": "^2.2.15",
+    "cli-progress": "^3.12.0"
+  }
+}
