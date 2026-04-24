@@ -3,17 +3,19 @@
   "version": "1.0.0",
   "main": "import.js",
   "scripts": {
-    "import": "node import.js"
+    "notion-import": "node notion-sync/import.js"
   },
   "type": "module",
   "author": "Nick Braica <nick.braica@gmail.com> (https://braican.com)",
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.6.1"
   },
   "dependencies": {
     "@notionhq/client": "^2.2.15",
-    "cli-progress": "^3.12.0"
+    "cli-progress": "^3.12.0",
+    "csv-parse": "^6.2.1",
+    "inquirer": "^13.4.2"
   }
 }
