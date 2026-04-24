@@ -5,6 +5,10 @@ import fs from "fs";
 import https from "https";
 import crypto from "crypto";
 import { parse } from "csv-parse/sync";
+import { createRequire } from "module";
+
+const require = createRequire(import.meta.url);
+const eventMap = require("./events.json");
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
@@ -29,7 +33,10 @@ Arguments:
 
 Import source (one required):
   --csv <path>       Path to an Eventbrite CSV export
-  --event-id <id>    Eventbrite event ID to fetch attendees from the API
+  --event-id <id>    Eventbrite event ID (overrides events.json lookup)
+
+  If neither --csv nor --event-id is provided, the event name will be looked
+  up in events.json automatically.
 
 Options:
   --year YYYY        Override the year (default: current year)
@@ -51,11 +58,22 @@ const yearIdx = args.indexOf("--year");
 const dryRun = args.includes("--dry-run");
 
 const csvPath = csvIdx !== -1 ? args[csvIdx + 1] : null;
-const eventId = eventIdIdx !== -1 ? args[eventIdIdx + 1] : null;
+let eventId = eventIdIdx !== -1 ? args[eventIdIdx + 1] : null;
+
+// If no --event-id, try to resolve from events.json
+if (!csvPath && !eventId) {
+  if (eventMap[eventName]) {
+    eventId = eventMap[eventName];
+    console.log(`Resolved "${eventName}" to Eventbrite event ID ${eventId}`);
+  }
+}
 const year = yearIdx !== -1 ? args[yearIdx + 1] : new Date().getFullYear();
 
 if (!eventName) {
-  console.error("Error: <event-name> is required.");
+  console.error("Error: <event-name> is required as the first argument.");
+  console.error(
+    'Example: node sync.js "Winch and Pulley" --event-id 1980195354611',
+  );
   process.exit(1);
 }
 
@@ -282,7 +300,6 @@ async function upsertContact(registrant, audience) {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
-  // Load registrants
   console.log(
     importSource === "csv"
       ? "Reading CSV..."
@@ -294,12 +311,10 @@ async function main() {
       : await importFromEventbrite(eventId);
   console.log(`Found ${registrants.length} registrants.\n`);
 
-  // Load audience
   console.log("Fetching existing audience from Mailchimp...");
   const audience = await fetchAudience();
   console.log(`Found ${audience.size} existing contacts in audience.\n`);
 
-  // Dry run
   if (dryRun) {
     const results = registrants.map((r) => ({
       ...r,
@@ -334,7 +349,6 @@ async function main() {
     return;
   }
 
-  // Sync
   let ok = 0,
     fail = 0;
   for (const r of registrants) {
